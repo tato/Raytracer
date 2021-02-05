@@ -12,9 +12,7 @@ struct Canvas {
     width: u32,
     height: u32,
 }
-extern "C" {
-    fn fill_canvas(canvas: *mut Canvas);
-}
+extern "C" { fn fill_canvas(canvas: *mut Canvas); }
 
 
 fn main() {
@@ -40,34 +38,31 @@ fn main() {
     };
 
     event_loop.run(move |event, _, control_flow| {
-        println!(".");
         if let Event::RedrawRequested(_) = event {
-            let mut canvas = Canvas { memory: pixels.get_frame().as_mut_ptr(), width, height };
+            let frame = pixels.get_frame();
+            let mut canvas = Canvas { memory: frame.as_mut_ptr(), width, height };
+            // TODO: IDK there's a wacky race condition Σ(っ °Д °;)っ
+            std::thread::sleep(std::time::Duration::new(0, 1));
+
             unsafe { fill_canvas(&mut canvas); };
+
             if pixels.render().is_err() {
                 *control_flow = ControlFlow::Exit;
                 return;
             }
         }
 
-        // Handle input events
-        println!("before update");
         if input.update(&event) {
-            // Close events
             if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
                 *control_flow = ControlFlow::Exit;
                 return;
             }
-
-            // Resize the window
             if let Some(size) = input.window_resized() {
                 pixels.resize(size.width, size.height);
             }
 
-            // Update internal state and request a redraw
             // world.update();
             window.request_redraw();
         }
-        println!("after update");
     });
 }
