@@ -41,9 +41,6 @@ fn main() {
         if let Event::RedrawRequested(_) = event {
             let frame = pixels.get_frame();
             let mut canvas = Canvas { memory: frame.as_mut_ptr(), width, height };
-            // TODO: IDK there's a wacky race condition Σ(っ °Д °;)っ
-            std::thread::sleep(std::time::Duration::new(0, 1));
-
             unsafe { fill_canvas(&mut canvas); };
 
             if pixels.render().is_err() {
