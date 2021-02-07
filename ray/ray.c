@@ -1,7 +1,5 @@
 #include <ray.h>
-
-#define STB_DS_IMPLEMENTATION
-#include <stb_ds.h>
+#include <stretchy_buffer.h>
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -80,7 +78,7 @@ V3 canvas_to_viewport(World *world, int cx, int cy) {
 
 float compute_lighting(World *world, V3 p, V3 n, V3 v, float s) {
     float result = 0.f;
-    for (int i = 0; i < arrlen(world->lights); i++) {
+    for (int i = 0; i < sb_count(world->lights); i++) {
         Light *light = &world->lights[i];
         if (light->type == AMBIENT) {
             result += light->intensity;
@@ -148,7 +146,7 @@ RGBA trace_ray(World *world, V3 d, float t_min, float t_max) {
     float closest_t = INF;
     Sphere *closest_sphere = NULL;
 
-    for (int i = 0; i < arrlen(world->spheres); i++) {
+    for (int i = 0; i < sb_count(world->spheres); i++) {
         Sphere *sphere = &world->spheres[i];
 
         float t1, t2;
@@ -190,42 +188,42 @@ void frame(Canvas *canvas) {
         sphere.radius = 1.f;
         sphere.color = (RGBA){255, 0, 0, 255};
         sphere.specular = 500;
-        arrput(world.spheres, sphere);
+        sb_push(world.spheres, sphere);
 
         sphere.center = (V3){ 2.f, 0.f, 4.f };
         sphere.radius = 1.f;
         sphere.color = (RGBA){0, 0, 255, 255};
         sphere.specular = 500;
-        arrput(world.spheres, sphere);
+        sb_push(world.spheres, sphere);
 
         sphere.center = (V3){ -2.f, 0.f, 4.f };
         sphere.radius = 1.f;
         sphere.color = (RGBA){0, 255, 0, 255};
         sphere.specular = 10;
-        arrput(world.spheres, sphere);
+        sb_push(world.spheres, sphere);
 
         sphere.center = (V3){ 0.f, -5001.f, 0.f };
         sphere.radius = 5000.f;
         sphere.color = (RGBA){255, 255, 0, 255};
         sphere.specular = 1000;
-        arrput(world.spheres, sphere);
+        sb_push(world.spheres, sphere);
 
         Light ambient = {};
         ambient.type = AMBIENT;
         ambient.intensity = .2f;
-        arrput(world.lights, ambient);
+        sb_push(world.lights, ambient);
 
         Light point = {};
         point.type = POINT;
         point.intensity = 0.6f;
         point.position = (V3){ 2.f, 1.f, 0.f };
-        arrput(world.lights, point);
+        sb_push(world.lights, point);
 
         Light directional = {};
         directional.type = DIRECTIONAL;
         directional.intensity = .2f;
         directional.direction = (V3){ 1.f, 4.f, 4.f };
-        arrput(world.lights, directional);
+        sb_push(world.lights, directional);
     }
     world.canvas = canvas;
 
