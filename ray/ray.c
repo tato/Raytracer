@@ -17,6 +17,7 @@ typedef struct {
     V3 center;
     float radius;
     RGBA color;
+    float specular;
 } Sphere;
 
 typedef enum {
@@ -59,7 +60,12 @@ float v3len(V3 v) {
     return sqrtf(v.x*v.x + v.y*v.y + v.z*v.z);
 }
 RGBA rgbamul(RGBA a, float t) {
-    return (RGBA){ a.r*t, a.g*t, a.b*t, a.a*t };
+    return (RGBA){
+        min(max(0, a.r*t), 255),
+        min(max(0, a.g*t), 255),
+        min(max(0, a.b*t), 255),
+        min(max(0, a.a*t), 255),
+    };
 }
 
 
@@ -72,7 +78,7 @@ V3 canvas_to_viewport(World *world, int cx, int cy) {
 }
 
 
-float compute_lighting(World *world, V3 p, V3 n) {
+float compute_lighting(World *world, V3 p, V3 n, V3 v, float s) {
     float result = 0.f;
     for (int i = 0; i < arrlen(world->lights); i++) {
         Light *light = &world->lights[i];
@@ -86,9 +92,23 @@ float compute_lighting(World *world, V3 p, V3 n) {
                 l = light->direction;
             }
 
+            // diffuse
             float n_dot_l = dot(n, l);
             if (n_dot_l > 0.f) {
                 result += light->intensity * n_dot_l / (v3len(n) * v3len(l));
+            }
+
+            // specular
+            if (s != -1.f) {
+                V3 r = v3mul(n, 2);
+                r = v3mul(r, dot(n, l));
+                r = v3sub(r, l);
+
+                float r_dot_v = dot(r, v);
+                if (r_dot_v > 0.f) {
+                    float specular_i = pow(r_dot_v/(v3len(r)*v3len(v)), s);
+                    result += light->intensity * specular_i;
+                }
             }
         }
     }
@@ -151,7 +171,7 @@ RGBA trace_ray(World *world, V3 d, float t_min, float t_max) {
     V3 p = v3add(world->camera_origin, v3mul(d, closest_t));
     V3 n = v3sub(p, closest_sphere->center);
     n = v3div(n, v3len(n));
-    return rgbamul(closest_sphere->color, compute_lighting(world, p, n));
+    return rgbamul(closest_sphere->color, compute_lighting(world, p, n, v3mul(d, -1), closest_sphere->specular));
 }
 
 
@@ -169,21 +189,25 @@ void frame(Canvas *canvas) {
         sphere.center = (V3){ 0.f, -1.f, 3.f };
         sphere.radius = 1.f;
         sphere.color = (RGBA){255, 0, 0, 255};
+        sphere.specular = 500;
         arrput(world.spheres, sphere);
 
         sphere.center = (V3){ 2.f, 0.f, 4.f };
         sphere.radius = 1.f;
         sphere.color = (RGBA){0, 0, 255, 255};
+        sphere.specular = 500;
         arrput(world.spheres, sphere);
 
         sphere.center = (V3){ -2.f, 0.f, 4.f };
         sphere.radius = 1.f;
         sphere.color = (RGBA){0, 255, 0, 255};
+        sphere.specular = 10;
         arrput(world.spheres, sphere);
 
         sphere.center = (V3){ 0.f, -5001.f, 0.f };
         sphere.radius = 5000.f;
         sphere.color = (RGBA){255, 255, 0, 255};
+        sphere.specular = 1000;
         arrput(world.spheres, sphere);
 
         Light ambient = {};
