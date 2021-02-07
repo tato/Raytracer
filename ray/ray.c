@@ -61,10 +61,10 @@ float v3len(V3 v) {
 }
 RGBA rgbamul(RGBA a, float t) {
     return (RGBA){
-        min(max(0, a.r*t), 255),
-        min(max(0, a.g*t), 255),
-        min(max(0, a.b*t), 255),
-        min(max(0, a.a*t), 255),
+        fmin(fmax(0, a.r*t), 255),
+        fmin(fmax(0, a.g*t), 255),
+        fmin(fmax(0, a.b*t), 255),
+        fmin(fmax(0, a.a*t), 255),
     };
 }
 
