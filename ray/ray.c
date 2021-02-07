@@ -1,5 +1,8 @@
 #include <ray.h>
 
+#define STB_DS_IMPLEMENTATION
+#include <stb_ds.h>
+
 #include <stdbool.h>
 #include <math.h>
 
@@ -20,7 +23,7 @@ typedef struct {
     Canvas *canvas;
     float viewport_width, viewport_height, viewport_distance;
     V3 camera_origin;
-    Sphere spheres[3]; // todo stb array 
+    Sphere *spheres; 
 } World;
 
 float dot(V3 a, V3 b) {
@@ -66,7 +69,7 @@ RGBA trace_ray(World *world, V3 d, float t_min, float t_max) {
     float closest_t = INF;
     Sphere *closest_sphere = NULL;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < arrlen(world->spheres); i++) {
         Sphere *sphere = &world->spheres[i];
 
         float t1, t2;
@@ -96,17 +99,21 @@ void frame(Canvas *canvas) {
         world.viewport_distance = 1.0f;
         world.camera_origin = (V3){ 0.f, 0.f, 0.f };
 
-        world.spheres[0].center = (V3){ 0.f, -1.f, 3.f };
-        world.spheres[0].radius = 1.f;
-        world.spheres[0].color = (RGBA){255, 0, 0, 255};
+        Sphere sphere = {};
+        sphere.center = (V3){ 0.f, -1.f, 3.f };
+        sphere.radius = 1.f;
+        sphere.color = (RGBA){255, 0, 0, 255};
+        arrput(world.spheres, sphere);
 
-        world.spheres[1].center = (V3){ 2.f, 0.f, 4.f };
-        world.spheres[1].radius = 1.f;
-        world.spheres[1].color = (RGBA){0, 0, 255, 255};
+        sphere.center = (V3){ 2.f, 0.f, 4.f };
+        sphere.radius = 1.f;
+        sphere.color = (RGBA){0, 0, 255, 255};
+        arrput(world.spheres, sphere);
 
-        world.spheres[2].center = (V3){ -2.f, 0.f, 4.f };
-        world.spheres[2].radius = 1.f;
-        world.spheres[2].color = (RGBA){0, 255, 0, 255};
+        sphere.center = (V3){ -2.f, 0.f, 4.f };
+        sphere.radius = 1.f;
+        sphere.color = (RGBA){0, 255, 0, 255};
+        arrput(world.spheres, sphere);
     }
     world.canvas = canvas;
 
