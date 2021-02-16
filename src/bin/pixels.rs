@@ -4,41 +4,7 @@ use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
-
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-struct RGBA {
-    r: u8,
-    g: u8,
-    b: u8,
-    a: u8,
-}
-
-type PutPixelFn = extern "C" fn(*mut Canvas, i32, i32, RGBA);
-
-#[repr(C)]
-struct Canvas {
-    memory: *mut u8,
-    width: i32,
-    height: i32,
-    put_pixel: PutPixelFn,
-}
-extern "C" {
-    fn frame(canvas: *mut Canvas);
-}
-
-extern "C" fn put_pixel(canvas: *mut Canvas, x: i32, y: i32, color: RGBA) {
-    let canvas: &mut Canvas = unsafe { &mut (*canvas) };
-    let x = canvas.width / 2 + x;
-    let y = canvas.height / 2 - y;
-    let i = (y * canvas.width + x) as usize;
-    unsafe {
-        canvas.memory.add(i * 4).write(color.r);
-        canvas.memory.add(i * 4 + 1).write(color.g);
-        canvas.memory.add(i * 4 + 2).write(color.b);
-        canvas.memory.add(i * 4 + 3).write(color.a);
-    }
-}
+use raytracer::{Canvas, put_pixel, frame};
 
 fn main() {
     let event_loop = EventLoop::new();

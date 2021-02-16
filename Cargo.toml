@@ -4,11 +4,19 @@ version = "0.1.0"
 authors = ["Pablo Tato Ramos <pabtatoramos@gmail.com>"]
 edition = "2018"
 build = "build.rs"
+default-run = "pixels"
+
+[[bin]]
+name = "pixels"
+required-features = ["pixels-backend"]
+
+[features]
+pixels-backend = ["pixels", "winit", "winit_input_helper"]
 
 [dependencies]
-pixels = "0.2.0"
-winit = "0.24.0"
-winit_input_helper = "0.9.0"
+pixels = { version="0.2.0", optional=true }
+winit = { version="0.24.0", optional=true }
+winit_input_helper = { version="0.9.0", optional=true }
 
 [build-dependencies]
 cc = { version = "1.0", features = ["parallel"] }
