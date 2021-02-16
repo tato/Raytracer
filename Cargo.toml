@@ -10,13 +10,19 @@ default-run = "pixels"
 name = "pixels"
 required-features = ["pixels-backend"]
 
+[[bin]]
+name = "minifb"
+required-features = ["minifb-backend"]
+
 [features]
 pixels-backend = ["pixels", "winit", "winit_input_helper"]
+minifb-backend = ["minifb"]
 
 [dependencies]
 pixels = { version="0.2.0", optional=true }
 winit = { version="0.24.0", optional=true }
 winit_input_helper = { version="0.9.0", optional=true }
+minifb = { version="0.19.2", optional=true }
 
 [build-dependencies]
 cc = { version = "1.0", features = ["parallel"] }

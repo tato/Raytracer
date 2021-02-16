@@ -11,7 +11,7 @@ pub type PutPixelFn = extern "C" fn(*mut Canvas, i32, i32, RGBA);
 
 #[repr(C)]
 pub struct Canvas {
-    pub memory: *mut u8,
+    pub memory: *mut u32,
     pub width: i32,
     pub height: i32,
     pub put_pixel: PutPixelFn,
@@ -25,10 +25,8 @@ pub extern "C" fn put_pixel(canvas: *mut Canvas, x: i32, y: i32, color: RGBA) {
     let x = canvas.width / 2 + x;
     let y = canvas.height / 2 - y;
     let i = (y * canvas.width + x) as usize;
-    unsafe {
-        canvas.memory.add(i * 4).write(color.r);
-        canvas.memory.add(i * 4 + 1).write(color.g);
-        canvas.memory.add(i * 4 + 2).write(color.b);
-        canvas.memory.add(i * 4 + 3).write(color.a);
-    }
+    let v: u32 = (color.r as u32) << 16
+        | (color.g as u32) << 8 
+        | (color.b as u32) << 0;
+    unsafe { canvas.memory.add(i).write(v); }
 }
