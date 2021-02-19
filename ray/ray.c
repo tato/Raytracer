@@ -76,44 +76,6 @@ V3 canvas_to_viewport(World *world, int cx, int cy) {
 }
 
 
-float compute_lighting(World *world, V3 p, V3 n, V3 v, float s) {
-    float result = 0.f;
-    for (int i = 0; i < sb_count(world->lights); i++) {
-        Light *light = &world->lights[i];
-        if (light->type == AMBIENT) {
-            result += light->intensity;
-        } else {
-            V3 l;
-            if (light->type == POINT) {
-                l = v3sub(light->position, p);
-            } else {
-                l = light->direction;
-            }
-
-            // diffuse
-            float n_dot_l = dot(n, l);
-            if (n_dot_l > 0.f) {
-                result += light->intensity * n_dot_l / (v3len(n) * v3len(l));
-            }
-
-            // specular
-            if (s != -1.f) {
-                V3 r = v3mul(n, 2);
-                r = v3mul(r, dot(n, l));
-                r = v3sub(r, l);
-
-                float r_dot_v = dot(r, v);
-                if (r_dot_v > 0.f) {
-                    float specular_i = pow(r_dot_v/(v3len(r)*v3len(v)), s);
-                    result += light->intensity * specular_i;
-                }
-            }
-        }
-    }
-    return result;
-}
-
-
 void intersect_ray_sphere(
         V3 o, V3 d, Sphere *sphere, // in
         float *t1, float *t2 // out
@@ -142,25 +104,80 @@ void intersect_ray_sphere(
 }
 
 
-RGBA trace_ray(World *world, V3 d, float t_min, float t_max) {
-    float closest_t = INF;
-    Sphere *closest_sphere = NULL;
-
+void closest_intersection(World *world, V3 o, V3 d, float t_min, float t_max, Sphere **closest_sphere, float *closest_t) {
+    *closest_t = INF;
+    *closest_sphere = NULL;
     for (int i = 0; i < sb_count(world->spheres); i++) {
         Sphere *sphere = &world->spheres[i];
 
         float t1, t2;
-        intersect_ray_sphere(world->camera_origin, d, sphere, &t1, &t2);
+        intersect_ray_sphere(o, d, sphere, &t1, &t2);
 
-        if (t1 >= t_min && t1 <= t_max && t1 < closest_t) {
-            closest_t = t1;
-            closest_sphere = sphere;
+        if (t1 >= t_min && t1 <= t_max && t1 < *closest_t) {
+            *closest_t = t1;
+            *closest_sphere = sphere;
         }
-        if (t2 >= t_min && t2 <= t_max && t2 < closest_t) {
-            closest_t = t2;
-            closest_sphere = sphere;
+        if (t2 >= t_min && t2 <= t_max && t2 < *closest_t) {
+            *closest_t = t2;
+            *closest_sphere = sphere;
         }
     }
+}
+
+
+float compute_lighting(World *world, V3 p, V3 n, V3 v, float s) {
+    float result = 0.f;
+    for (int i = 0; i < sb_count(world->lights); i++) {
+        Light *light = &world->lights[i];
+        if (light->type == AMBIENT) {
+            result += light->intensity;
+        } else {
+            V3 l;
+            float t_max;
+            if (light->type == POINT) {
+                l = v3sub(light->position, p);
+                t_max = 1.f;
+            } else {
+                l = light->direction;
+                t_max = INF;
+            }
+
+            Sphere *shadow_sphere;
+            float shadow_t;
+            closest_intersection(world, p, l, 0.001, t_max, &shadow_sphere, &shadow_t);
+            if (shadow_sphere != NULL) {
+                continue;
+            }
+
+            // diffuse
+            float n_dot_l = dot(n, l);
+            if (n_dot_l > 0.f) {
+                result += light->intensity * n_dot_l / (v3len(n) * v3len(l));
+            }
+
+            // specular
+            if (s != -1.f) {
+                V3 r = v3mul(n, 2);
+                r = v3mul(r, dot(n, l));
+                r = v3sub(r, l);
+
+                float r_dot_v = dot(r, v);
+                if (r_dot_v > 0.f) {
+                    float specular_i = pow(r_dot_v/(v3len(r)*v3len(v)), s);
+                    result += light->intensity * specular_i;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+
+RGBA trace_ray(World *world, V3 d, float t_min, float t_max) {
+    Sphere *closest_sphere;
+    float closest_t;
+    closest_intersection(world, world->camera_origin, d, t_min, t_max, &closest_sphere, &closest_t);
+
 
     if (closest_sphere == NULL) {
         return (RGBA){ 255, 255, 255, 255 };
