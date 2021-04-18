@@ -200,7 +200,7 @@ void frame(Canvas *canvas) {
         world.viewport_distance = 1.0f;
         world.camera_origin = (V3){ 0.f, 0.f, 0.f };
 
-        Sphere sphere = {};
+        Sphere sphere = {0};
         sphere.center = (V3){ 0.f, -1.f, 3.f };
         sphere.radius = 1.f;
         sphere.color = (RGBA){255, 0, 0, 255};
@@ -225,18 +225,18 @@ void frame(Canvas *canvas) {
         sphere.specular = 1000;
         sb_push(world.spheres, sphere);
 
-        Light ambient = {};
+        Light ambient = {0};
         ambient.type = AMBIENT;
         ambient.intensity = .2f;
         sb_push(world.lights, ambient);
 
-        Light point = {};
+        Light point = {0};
         point.type = POINT;
         point.intensity = 0.6f;
         point.position = (V3){ 2.f, 1.f, 0.f };
         sb_push(world.lights, point);
 
-        Light directional = {};
+        Light directional = {0};
         directional.type = DIRECTIONAL;
         directional.intensity = .2f;
         directional.direction = (V3){ 1.f, 4.f, 4.f };
